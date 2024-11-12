@@ -1,0 +1,49 @@
+# load file to process for X region
+file_path = '/data2/stripped_all.xlsx'
+excel_data = pd.ExcelFile(file_path)
+
+# Load data from All sheet and from Socken sheet, the Socken sheet already has the clean list of all sockenar in the region, without duplicates
+# X to be replaced by shorthand for the region
+# load the All sheet with the ratio for the periods and the weighted p
+all_data = excel_data.parse('All')
+# load the sheet for that region
+socken_data_X = excel_data.parse('SockenX')
+
+# fix column names in "SockenX" to fix stupid encoding bug 
+corrected_columns_X = [col.replace("Ã¦", "æ") for col in socken_data_X.columns]
+socken_data_ån.columns = corrected_columns_ån
+
+# make DataFrame for the results, i.e. make a clean copy to the target sheet
+X_results = socken_data_X.copy()
+
+# Define the region to filter as X, e.g. G for Gotland
+region_filter_X = 'X'
+
+# Process each parish in "SockenX" where the region is "X"
+# this loop iterates over each parish in socken_data_X assuming the first column holds parish names
+# .dropna() ensures we skip any empty cells, to be safe
+for parish in socken_data_X.iloc[:, 0].dropna():
+    # Filter rows in "All" where region is "X" and parish matches the current parish
+    # by: region matches region_filter_X 
+    # parish matches the current parish in the loop.
+    # result is parish_data, a subset of all_data for the specified region and parish.
+    parish_data = all_data[(all_data['region'] == region_filter_X) & (all_data['parish'] == parish)]
+    
+    # Calculate the re-weighted probability for each feature and period,    
+    # Outer Loop (for period, period_col in time_periods.items()) iterates over each time period in time_periods (e.g., 0-750, 750-1100).
+    # Inner Loop (for feature in feature_columns) iterates over each feature column (e.g., ai_ai, ai_a, etc.).
+    # re-Weighted Sum Calculation:
+     #   (parish_data[feature] * parish_data[period_col]).sum() calculates the re-weighted probability for each feature and period.
+     #   We multiply each feature's probability by the corresponding period proportion, then sum these values to get weighted_sum.
+
+
+
+    for period, period_col in time_periods.items():
+        for feature in feature_columns:
+            # Weighted sum for the current feature and period
+            weighted_sum = (parish_data[feature] * parish_data[period_col]).sum()
+            # Store the result in the appropriate column in "SockenÅn"
+            ån_results.loc[ån_results.iloc[:, 0] == parish, f"{feature}.{period}"] = weighted_sum
+
+# Save to a CSV file
+X_results.to_csv('X_Parish_Feature_Probabilities.csv', index=False)
