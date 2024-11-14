@@ -1,0 +1,82 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+# grab the Excel sheet
+excel_path = './stripped_all.xlsx'
+all_smear_per = pd.read_excel(excel_path, sheet_name='AllSmearPer')
+
+# Filter columns for "ai_" and 'Region' 
+ai_features = all_smear_per.loc[:, all_smear_per.columns.str.startswith('ai_') | (all_smear_per.columns == 'Region')]
+
+# grab inscription data from the columns for ai sounds
+inscription_counts = all_smear_per.loc[:, ["Region", "0-750.ai", "750-1100.ai", "1100-1500.ai", "1500-now.ai"]]
+inscription_counts.columns = ["Region", "0-750", "750-1100", "1100-1500", "1500-now"]
+
+# Define time periods
+time_periods = ["0-750", "750-1100", "1100-1500", "1500-now"]
+
+# Set colour each feature prefix
+feature_colors = {
+    'ai': 'blue',
+    'a': 'purple',
+    'e': 'green',
+    'i': 'orange',
+    'ei': 'red',
+    'æi': 'yellow',
+    'gc': 'cyan',
+    'gv': 'magenta',
+}
+
+# Set up plot with rows equal to the number of regions+ 4 columns for each period
+num_regions = len(ai_features['Region'].unique())
+fig, axs = plt.subplots(num_regions, 4, figsize=(20, num_regions * 4))
+
+# format percentage and label in one box
+def custom_label(pct, label):
+    return f"{label}\n{pct:.1f}%"
+
+# Loop over region
+for i, region in enumerate(ai_features['Region'].unique()):
+    region_data = ai_features[ai_features['Region'] == region]
+    
+    # Loop over time period
+    for j, period in enumerate(time_periods):
+        period_columns = [col for col in ai_features.columns if col.endswith(period)]
+        period_data = region_data[period_columns].values.flatten()
+        
+        # grab inscription count for the current period and region
+        inscription_count = inscription_counts.loc[inscription_counts['Region'] == region, period].values[0]
+        
+        period_data = np.nan_to_num(period_data)
+        labels = [col.replace("ai_", "").split(".")[0] for col in period_columns]
+        
+        filtered_data = period_data[period_data > 0]
+        filtered_labels = [labels[k] for k in range(len(labels)) if period_data[k] > 0]
+        
+        filtered_colors = [feature_colors.get(label.split("_")[0], 'grey') for label in filtered_labels]
+        
+        if filtered_data.sum() == 0:
+            axs[i, j].text(0.5, 0.5, "No Data", ha='center', va='center', fontsize=12)
+            axs[i, j].set_title(f"{region} ({period})\n[{inscription_count} inscriptions]")
+            axs[i, j].axis('off')
+        else:
+            # Create pie chart with feature names only
+            wedges, texts = axs[i, j].pie(
+                filtered_data,
+                labels=filtered_labels,  # Only feature names
+                colors=filtered_colors,
+                startangle=90,
+                labeldistance=1.215
+            )
+             # Add legend beside each pie chart for labels
+            legend_labels = [custom_label(100 * filtered_data[k] / filtered_data.sum(), filtered_labels[k]) for k in range(len(filtered_labels))]
+            axs[i, j].legend(wedges, legend_labels, loc="center left", bbox_to_anchor=(1, 0.5), fontsize=8, frameon=True, title=f"{region} ({period})\n[{inscription_count} inscriptions]")
+            
+            axs[i, j].set_title(f"{region} ({period})\n[{inscription_count} inscriptions]")
+# Adjust layout
+plt.suptitle("Distribution of *ai Descendants Across Regions and Time Periods", y=1.02)
+plt.tight_layout()
+# Save plot as PNG 
+plt.savefig("Pies_ai_all.png", format="png", dpi=300, bbox_inches="tight")
+plt.show()
