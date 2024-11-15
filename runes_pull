@@ -16,6 +16,7 @@ letter_number_salad = itertools.chain(*letter_number_salad_lists)
 
 
 url_list = list(map(lambda x: f'https://app.raa.se/open/runor/api/snrd/inscriptions/{x}?edition_id=2020', letter_number_salad))
+# uncomment to check the url list
 # print(url_list)
 
 responses = []
@@ -29,9 +30,7 @@ for url in tqdm(url_list):
     json_responses.append(response.json())
     # ppt(response.json())
 
-# json responses looks most useful to me: it'll print them out as you go along here, but comment that out
-# as necessary, blah, but for an example, -->
-
+# uncomment for checking if it's actually pulling 
 # ppt(json_responses[0])
 
 flat = [flatten(i) for i in json_responses]
