@@ -45,7 +45,7 @@ for parish in socken_data_X.iloc[:, 0].dropna():
         for feature in feature_columns:
             # Weighted sum for the current feature and period
             weighted_sum = (parish_data[feature] * parish_data[period_col]).sum()
-            # Store the result in the appropriate column in "SockenÅn"
+            # Store the result in the appropriate column in "SockenX"
             ån_results.loc[ån_results.iloc[:, 0] == parish, f"{feature}.{period}"] = weighted_sum
 
 # Save to a CSV file
