@@ -1,0 +1,39 @@
+import requests
+import json
+import itertools
+import pandas as pd
+from pprint import pprint as ppt
+from tqdm.notebook import tqdm
+
+# grab this first `pip install flatten_json', it's not on conda
+from flatten_json import flatten
+
+
+response = requests.get("https://app.raa.se/open/runor/api/snrd/signa?edition_id=2020&matching_text=Ög%20")
+signum_data = json.loads(response.text)
+letter_number_salad_lists = [d["inscriptions"] for d in signum_data]
+letter_number_salad = itertools.chain(*letter_number_salad_lists)
+
+
+url_list = list(map(lambda x: f'https://app.raa.se/open/runor/api/snrd/inscriptions/{x}?edition_id=2020', letter_number_salad))
+# print(url_list)
+
+responses = []
+text_responses = []
+json_responses = []
+
+for url in tqdm(url_list):
+    response = requests.get(url)
+    responses.append(response)
+    text_responses.append(response.text)
+    json_responses.append(response.json())
+    # ppt(response.json())
+
+# json responses looks most useful to me: it'll print them out as you go along here, but comment that out
+# as necessary, blah, but for an example, -->
+
+# ppt(json_responses[0])
+
+flat = [flatten(i) for i in json_responses]
+df = pd.DataFrame(flat)
+df.to_csv(r'C:\Users\PPLS User\Documents\flat_runes.csv')
