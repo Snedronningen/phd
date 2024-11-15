@@ -14,7 +14,7 @@ socken_data_X = excel_data.parse('SockenX')
 
 # fix column names in "SockenX" to fix stupid encoding bug 
 corrected_columns_X = [col.replace("Ã¦", "æ") for col in socken_data_X.columns]
-socken_data_X.columns = corrected_columns_ån
+socken_data_X.columns = corrected_columns_X
 
 # make DataFrame for the results, i.e. make a clean copy to the target sheet
 X_results = socken_data_X.copy()
