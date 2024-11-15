@@ -1,0 +1,49 @@
+import pandas as pd
+import numpy as np
+
+# grab Excel file 
+file_path = './stripped_all.xlsx'  
+excel_data = pd.ExcelFile(file_path)
+
+# grab data from sheets
+all_data = excel_data.parse('AllCen')
+socken_data = excel_data.parse('SockenSö2')
+
+# Adjust column names cos stupid utf-8 bug
+corrected_columns = [col.replace("Ã¦", "æ") for col in socken_data.columns]
+socken_data.columns = corrected_columns
+
+#  copy for results
+g_results = socken_data.copy()
+
+# region filter to get right region only
+region_filter = 'Sö'
+
+# Define the periods and features 
+time_periods = {
+    '200-300': '200-300', '300-400': '300-400', '400-500': '400-500',
+    '500-600': '500-600', '600-700': '600-700', '700-800': '700-800',
+    '800-900': '800-900', '900-1000': '900-1000', '1000-1100': '1000-1100',
+    '1100-1200': '1100-1200', '1200-1300': '1200-1300', '1300-1400': '1300-1400',
+    '1400-1500': '1400-1500', '1500-1600': '1500-1600'
+}
+
+feature_columns = [col for col in all_data.columns if col.startswith("ai_") or col.startswith("gc_") or col.startswith("gv_")]
+
+# Process sockenar
+for parish in socken_data.iloc[:, 0].dropna():
+    # Filter rows for region and parish matches
+    parish_data = all_data[(all_data['region'] == region_filter) & (all_data['parish'] == parish)]
+    
+    # Calculate weighted p for feature and period
+    for period, period_col in time_periods.items():
+        for feature in feature_columns:
+            # Weighted sum current feature and period
+            weighted_sum = (parish_data[feature] * parish_data[period_col]).sum()
+            # Store result in sheet
+            g_results.loc[g_results.iloc[:, 0] == parish, f"{feature}.{period}"] = weighted_sum
+
+# Save to CSV 
+g_results.to_csv('Sö_Parish_Feature_Probabilities.csv', index=False)
+# tell me you are done and it didn't go pear shaped
+print("File saved as 'Sö_Parish_Feature_Probabilities.csv'")
