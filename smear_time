@@ -22,6 +22,25 @@ X_results = socken_data_X.copy()
 # Define the region to filter as X, e.g. G for Gotland
 region_filter_X = 'X'
 
+time_periods = {
+     "200-300": "200-300",
+    "300-400": "300-400",
+    "400-500": "400-500",
+    "500-600": "500-600",
+    "600-700": "600-700",
+    "700-800": "700-800",
+    "800-900": "800-900",
+    "900-1000": "900-1000",
+    "1000-1100": "1000-1100",
+    "1100-1200": "1100-1200",
+    "1200-1300": "1200-1300",
+    "1300-1400": "1300-1400",
+    "1400-1500": "1400-1500",
+    "1500-1600": "1500-1600"
+}
+
+feature_columns = [col for col in all_data.columns if col.startswith("ai_") or col.startswith("gc_") or col.startswith("gv_")]
+
 # Process each parish in "SockenX" where the region is "X"
 # this loop iterates over each parish in socken_data_X assuming the first column holds parish names
 # .dropna() ensures we skip any empty cells, to be safe
